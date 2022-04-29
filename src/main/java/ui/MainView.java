@@ -12,8 +12,8 @@ import static java.awt.FlowLayout.CENTER;
 
 public class MainView implements View{
 
-    private static final int MAIN_FRAME_WIDTH = 1280;
-    private static final int MAIN_FRAME_HEIGHT = 1500;
+    private static final int MAIN_FRAME_WIDTH = 720;
+    private static final int MAIN_FRAME_HEIGHT = 900;
     private static final int WIDGET_MARGIN = 12;
 
     private final MainViewModel viewModel = Injection.provideMainViewModel();
