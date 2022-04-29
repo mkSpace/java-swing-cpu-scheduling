@@ -1,0 +1,15 @@
+.gradle
+build/
+build/*
+*.class
+*.bin
+*.lock
+.gradle/*
+
+### IntelliG IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+out/
+.idea/*
