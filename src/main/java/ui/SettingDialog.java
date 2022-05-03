@@ -17,6 +17,9 @@ public class SettingDialog extends JDialog {
     }
 
     private void setupViews() {
-
+        JTabbedPane manualPane = new JTabbedPane();
+        JLabel subtitleLabel = new JLabel("List of Processes");
+        manualPane.addTab("Manual", null, subtitleLabel, "");
+        add(manualPane);
     }
 }
