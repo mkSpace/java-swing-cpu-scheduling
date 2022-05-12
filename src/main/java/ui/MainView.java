@@ -1,7 +1,11 @@
 package ui;
 
+import data.Algorithm;
+import data.Result;
 import di.Injection;
+import extensions.Message;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -22,6 +26,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Objects;
 
 import static java.awt.FlowLayout.CENTER;
 
@@ -37,7 +42,7 @@ public class MainView implements View {
             "Priority Scheduling",
             "Round Robin"
     };
-    private static final String[] PROCESS_COLUMN_NAME = {
+    public static final String[] PROCESS_COLUMN_NAME = {
             "Process No.",
             "Burst Time",
             "Arrival Time",
@@ -59,9 +64,13 @@ public class MainView implements View {
     private final JPanel outputPanel;
     private final JButton settingButton;
     private final JButton runningButton;
-    private final ProcessTableModel processTableModel;
-    private final DefaultTableModel outputTableModel;
     private final JFreeChart ganttChart;
+    private ProcessTableModel processTableModel;
+    private DefaultTableModel outputTableModel;
+    private JTable processTable;
+    private JTable outputTable;
+    private JComboBox<String> algorithmComboBox;
+    private JLabel resultLabel;
 
     public MainView() {
         mainFrame = new JFrame("App");
@@ -78,8 +87,6 @@ public class MainView implements View {
                 disposables.dispose();
             }
         });
-        processTableModel = new ProcessTableModel(PROCESS_COLUMN_NAME);
-        outputTableModel = new DefaultTableModel(OUTPUT_PROCESS_COLUMN_NAME, 0);
     }
 
     @Override
@@ -87,12 +94,57 @@ public class MainView implements View {
         setupProcessPanel();
         setupOutputPanel();
         setupMainFrame();
-        new ProcessDialog(mainFrame, "Add Process").setVisible(true);
+        bindViewModels();
     }
 
     @Override
     public void bindViewModels() {
+        disposables.add(
+                viewModel.getTableModels()
+                        .observeOn(Schedulers.computation())
+                        .subscribe(models -> {
+                            processTableModel = new ProcessTableModel(PROCESS_COLUMN_NAME);
+                            models.forEach(model -> processTableModel.addRow(model));
+                            processTable.setModel(processTableModel);
+                        })
+        );
 
+        disposables.add(
+                viewModel.getSelectedAlgorithm()
+                        .observeOn(Schedulers.computation())
+                        .subscribe(algorithm -> {
+                            String selectedItem = (String) algorithmComboBox.getSelectedItem();
+                            int mode = 0;
+                            if (Objects.equals(selectedItem, ALGORITHM_LIST[1])) {
+                                mode = 1;
+                            } else if (Objects.equals(selectedItem, ALGORITHM_LIST[2])) {
+                                mode = 2;
+                            } else if (Objects.equals(selectedItem, ALGORITHM_LIST[3])) {
+                                mode = 3;
+                            }
+                            if (algorithm.ordinal() != mode) {
+                                algorithmComboBox.setSelectedIndex(algorithm.ordinal());
+                            }
+                        })
+        );
+
+        disposables.add(
+                viewModel.getLatestResult()
+                        .observeOn(Schedulers.computation())
+                        .subscribe(this::renderResult)
+        );
+
+        disposables.add(
+                viewModel.getAlertMessage()
+                        .observeOn(Schedulers.computation())
+                        .subscribe(Message::showAlertMessage)
+        );
+
+        disposables.add(
+                viewModel.getErrorMessage()
+                        .observeOn(Schedulers.computation())
+                        .subscribe(Message::showErrorMessage)
+        );
     }
 
     private void setupMainFrame() {
@@ -113,13 +165,32 @@ public class MainView implements View {
         processPanel.setPreferredSize(new Dimension(MAIN_FRAME_WIDTH, (int) Math.round(MAIN_FRAME_HEIGHT * 0.4)));
         JPanel optionPanel = new JPanel(new FlowLayout());
         JLabel optionChoiceLabel = new JLabel("Choose the Scheduling Algorithm : ");
-        JComboBox<String> spinner = new JComboBox<>(ALGORITHM_LIST);
+        algorithmComboBox = new JComboBox<>(ALGORITHM_LIST);
         optionPanel.add(optionChoiceLabel);
-        optionPanel.add(spinner);
+        optionPanel.add(algorithmComboBox);
+
+        algorithmComboBox.addActionListener(e -> {
+            String selectedItem = (String) algorithmComboBox.getSelectedItem();
+            if (Objects.equals(selectedItem, ALGORITHM_LIST[0])) {
+                viewModel.setAlgorithm(Algorithm.FCFS);
+            } else if (Objects.equals(selectedItem, ALGORITHM_LIST[1])) {
+                viewModel.setAlgorithm(Algorithm.SJF);
+            } else if (Objects.equals(selectedItem, ALGORITHM_LIST[2])) {
+                viewModel.setAlgorithm(Algorithm.PRIORITY);
+            } else {
+                viewModel.setAlgorithm(Algorithm.RR);
+            }
+        });
+
+        settingButton.addActionListener(e -> {
+            new SettingDialog(mainFrame, "Details of Process").setVisible(true);
+        });
+
+        runningButton.addActionListener(e -> viewModel.run());
+
         optionPanel.add(settingButton);
         optionPanel.add(runningButton);
-//        tableModel.addRow(new Object[]{"1", "2", "3", "4", Color.RED});
-        JTable processTable = new JTable(processTableModel);
+        processTable = new JTable();
         DefaultTableCellRenderer renderer = (DefaultTableCellRenderer) processTable.getTableHeader().getDefaultRenderer();
         renderer.setHorizontalAlignment(SwingConstants.CENTER);
         processTable.getTableHeader().setDefaultRenderer(renderer);
@@ -132,7 +203,6 @@ public class MainView implements View {
     }
 
     private void setupGanttChart() {
-//        ganttChart.set
         CategoryPlot plot = ganttChart.getCategoryPlot();
         DateAxis axis = (DateAxis) plot.getRangeAxis();
         axis.setMaximumDate(new Date(19));
@@ -151,7 +221,7 @@ public class MainView implements View {
         };
         outputPanel.add(chartPanel);
         JPanel resultPanel = new JPanel(new FlowLayout());
-        JTable outputTable = new JTable(outputTableModel);
+        outputTable = new JTable(outputTableModel);
         DefaultTableCellRenderer renderer = (DefaultTableCellRenderer) outputTable.getTableHeader().getDefaultRenderer();
         renderer.setHorizontalAlignment(SwingConstants.CENTER);
         outputTable.getTableHeader().setDefaultRenderer(renderer);
@@ -159,8 +229,9 @@ public class MainView implements View {
         outputTable.setFillsViewportHeight(true);
         outputTable.setPreferredSize(new Dimension((MAIN_FRAME_WIDTH - (WIDGET_MARGIN * 2)) / 2, (int) Math.round(MAIN_FRAME_HEIGHT * 0.2)));
         scrollPane.setPreferredSize(new Dimension((MAIN_FRAME_WIDTH - (WIDGET_MARGIN * 2)) / 2, (int) Math.round(MAIN_FRAME_HEIGHT * 0.2)));
+        resultLabel = new JLabel("<html><body style='text-align:left;'>Average Wait Time : _ <br />Average Turnaround Time : _ .</body></html>", JLabel.LEFT);
         resultPanel.add(scrollPane);
-        resultPanel.add(new JLabel("<html><body style='text-align:left;'>Average Wait Time : 4.8 <br />Average Turnaround Time : 8.8.</body></html>", JLabel.LEFT));
+        resultPanel.add(resultLabel);
         outputPanel.add(resultPanel);
     }
 
@@ -173,5 +244,20 @@ public class MainView implements View {
         dataset.add(series);
         dataset.add(series2);
         return dataset;
+    }
+
+    private void renderResult(Result result) {
+        resultLabel.setText(
+                "<html><body style='text-align:left;'>Average Wait Time : " + result.getAverageWaitTime() +
+                        "<br />Average Turnaround Time : " + result.getAverageTurnaroundTime() + ".</body></html>"
+        );
+        outputTableModel = new DefaultTableModel(OUTPUT_PROCESS_COLUMN_NAME, 0);
+        TaskSeriesCollection dataset = new TaskSeriesCollection();
+        result.getResult().forEach(taskResult -> {
+            dataset.add(taskResult.getSeries());
+            outputTableModel.addRow(new Object[]{taskResult.getProcessId(), taskResult.getWaitTime(), taskResult.getCompleteTime()});
+        });
+        outputTable.setModel(outputTableModel);
+        ganttChart.getCategoryPlot().setDataset(dataset);
     }
 }
