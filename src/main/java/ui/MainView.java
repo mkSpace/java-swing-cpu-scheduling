@@ -32,22 +32,21 @@ import static java.awt.FlowLayout.CENTER;
 
 public class MainView implements View {
 
-    private static final int MAIN_FRAME_WIDTH = 720;
-    private static final int MAIN_FRAME_HEIGHT = 900;
-    private static final int WIDGET_MARGIN = 12;
-
-    private static final String[] ALGORITHM_LIST = {
-            "First Come, First Served",
-            "Shortest Job First",
-            "Priority Scheduling",
-            "Round Robin"
-    };
     public static final String[] PROCESS_COLUMN_NAME = {
             "Process No.",
             "Burst Time",
             "Arrival Time",
             "Priority",
             "Color"
+    };
+    private static final int MAIN_FRAME_WIDTH = 720;
+    private static final int MAIN_FRAME_HEIGHT = 900;
+    private static final int WIDGET_MARGIN = 12;
+    private static final String[] ALGORITHM_LIST = {
+            "First Come, First Served",
+            "Shortest Job First",
+            "Priority Scheduling",
+            "Round Robin"
     };
     private static final String[] OUTPUT_PROCESS_COLUMN_NAME = {
             "Process No.",

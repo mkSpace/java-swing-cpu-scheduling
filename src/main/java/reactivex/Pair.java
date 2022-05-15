@@ -11,6 +11,10 @@ public class Pair<F, S> {
         this.second = second;
     }
 
+    public static <A, B> Pair<A, B> create(A a, B b) {
+        return new Pair<A, B>(a, b);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (!(o instanceof Pair)) {
@@ -27,10 +31,6 @@ public class Pair<F, S> {
 
     @Override
     public String toString() {
-        return "Pair{" + String.valueOf(first) + " " + String.valueOf(second) + "}";
-    }
-
-    public static <A, B> Pair<A, B> create(A a, B b) {
-        return new Pair<A, B>(a, b);
+        return "Pair{" + first + " " + second + "}";
     }
 }

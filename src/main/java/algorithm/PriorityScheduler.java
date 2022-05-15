@@ -3,7 +3,6 @@ package algorithm;
 import data.Process;
 import data.Result;
 import data.TaskResult;
-import extensions.Print;
 import org.jfree.data.gantt.Task;
 import org.jfree.data.time.SimpleTimePeriod;
 

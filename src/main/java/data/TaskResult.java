@@ -1,21 +1,22 @@
 package data;
 
-import extensions.Print;
 import org.jfree.data.gantt.Task;
 import org.jfree.data.gantt.TaskSeries;
 
 import java.util.List;
 
 public class TaskResult {
-    private TaskSeries series;
     private final int processId;
     private final int waitTime;
     private final int completeTime;
+    private TaskSeries series;
 
     public TaskResult(int processId, List<Task> taskList, int waitTime, int completeTime) {
         this.processId = processId;
         this.series = new TaskSeries("P" + processId);
-        taskList.forEach(task -> {series.add(task);});
+        taskList.forEach(task -> {
+            series.add(task);
+        });
         this.waitTime = waitTime;
         this.completeTime = completeTime;
     }

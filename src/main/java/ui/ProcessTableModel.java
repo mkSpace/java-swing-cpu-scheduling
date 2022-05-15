@@ -9,8 +9,8 @@ import java.util.ArrayList;
 public class ProcessTableModel extends AbstractTableModel {
     private final Class<?>[] columns = new Class<?>[]{String.class, String.class, String.class, String.class, ImageIcon.class};
     private final int cols = columns.length;
-    private ArrayList<Object[]> data;
     private final String[] columnNames;
+    private final ArrayList<Object[]> data;
 
     public ProcessTableModel(String[] columnNames) {
         this.columnNames = columnNames;

@@ -9,12 +9,12 @@ public class App {
         setupViews();
     }
 
-    private void setupViews() {
-        view.setupViews();
-    }
-
     public static void main(String[] args) {
         new App();
+    }
+
+    private void setupViews() {
+        view.setupViews();
     }
 
 }

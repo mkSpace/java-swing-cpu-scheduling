@@ -3,9 +3,9 @@ package data;
 import java.util.List;
 
 public class Result {
-    private List<TaskResult> result;
     private final double averageWaitTime;
     private final double averageTurnaroundTime;
+    private List<TaskResult> result;
 
     public Result(List<TaskResult> result, double averageWaitTime, double averageTurnaroundTime) {
         this.result = result;
